@@ -83,21 +83,16 @@ similarity = compute_ssim(im1, im2) * 100
 if similarity == 100:
     print("圖片相似度百分之百!")
     sys.exit()
-
 comparetext = (img_show(similarity, img1 , img2, name1 , name2))
-
 
 # 建立視窗
 top = tk.Tk() 
 top.title('對比') 
 top.geometry('1200x700+200+100') 
 
-
 # 讀取圖片
 picture1 = ImageTk.PhotoImage(Image.open('pic1.jpg'))
 picture2 = ImageTk.PhotoImage(Image.open('pic2.jpg'))
-
-
 
 #按鈕函式
 def compare_images():
@@ -113,7 +108,6 @@ label_right.grid(row=0, column=1, padx=10, pady=10)
 # 建立文字label
 label_left_text = tk.Label(top, text="", height=10, width=30)
 label_left_text.grid(row=1, column=0, padx=10, pady=10)
-
 # 建立比較按鈕
 compare_button = tk.Button(top, text="比較圖片", command=compare_images)
 compare_button.grid(row=1, column=1, padx=10, pady=10)
