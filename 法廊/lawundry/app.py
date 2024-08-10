@@ -11,7 +11,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 FILENAMES = ["", ""] # filename 永遠只有2個
 
-# Configure logging
+# Configure logging 就是那些原本在terminal 的東西會跑到app.log 這樣比較好真錯我覺得
 logging.basicConfig(filename='app.log', level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(message)s')
 
@@ -32,7 +32,7 @@ def index():
 def send_css(path):
     return send_from_directory('css', path)
 
-# Run the script before the first request
+# run BeforeRequest.sh 他的目的是為了要清空之前的資料 不然電腦早晚會爆炸
 def run_before_request():
     try:
         result = subprocess.run(['./BeforeRequest.sh', 'arg1', 'arg2'], capture_output=True, text=True, check=True)
@@ -125,6 +125,44 @@ def get_features():
     print("Features1:", features1)
     print("Features2:", features2)
     return jsonify({'features1': features1, 'features2': features2})
+
+# 存被勾選的檔案是啥
+@app.route('/save_image_src', methods=['POST'])
+def save_image_src():
+    data = request.json
+    src1 = data.get('src1', '')
+    src2 = data.get('src2', '')
+
+    # 只保留 "/partpic/sharp_1_cake.jpg" 部分
+    src1_path = src1.split('static')[-1]
+    src2_path = src2.split('static')[-1]
+
+    try:
+        with open('partial-imagesChecked.txt', 'w') as file:
+            file.write(f"{src1_path}\n")
+            file.write(f"{src2_path}\n")
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# run runpartial.sh
+@app.route('/run_partial_script', methods=['POST'])
+def run_partial_script():
+    try:
+        # 使用 subprocess 运行 runPartial.sh
+        result = subprocess.run(['./runPartial.sh'], capture_output=True, text=True, check=True)
+        print("runPartial.sh executed successfully")
+        
+        with open('PartialHSVresult.txt', 'r') as hsv_file:
+            hsv = hsv_file.read().strip()
+            print("HSV result:", hsv)
+        with open('PartialSSIMresult.txt', 'r') as ssim_file:
+            ssim = ssim_file.read().strip()
+            print("SSIM result:", ssim)
+        
+        return jsonify({"success": True, "ssim": ssim, "hsv": hsv}), 200
+    except subprocess.CalledProcessError as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     # run

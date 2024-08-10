@@ -104,6 +104,16 @@ body {
   margin: 0;
   margin-bottom: 20px;
 }
+.feature-images-description {
+  color: #000000;
+  font-size: 25px;
+  font-weight: 800;
+  width: auto;
+  text-align: center;
+  margin: 0;
+  margin-bottom: 20px;
+}
+
 
 .result-value {
   color: #000000;
@@ -172,7 +182,7 @@ body {
   margin: 10px;
 }
 
-.upload-button {
+.upload-button , .feature-upload-button{
   font-size: 18px;
   display: flex;
   justify-content: center;
@@ -187,8 +197,16 @@ body {
   cursor: pointer; /* 当鼠标移至按钮上时，改变鼠标指针 */
   transition: background-color 0.3s ease; /* 添加过渡效果 */
 }
+.feature-upload-button-container {
+  display: flex; /* 使用 flexbox 进行布局 */
+  align-items: center; /* 垂直居中按钮 */
+  justify-content: center; /* 水平居中按钮 */
+}
 
 .upload-button:hover {
+  background-color: #000000; /* 当鼠标移至按钮上时，改变背景色 */
+}
+.feature-upload-button:hover {
   background-color: #000000; /* 当鼠标移至按钮上时，改变背景色 */
 }
 
@@ -297,6 +315,13 @@ body {
 
 .feature-selection-item input[type="checkbox"]:checked + label img {
   border: 2px solid #007BFF; /* 當選中時更改邊框顏色 */
+}
+
+.partial-image-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  
 }
 
 .footer {
