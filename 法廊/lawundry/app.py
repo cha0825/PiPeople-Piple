@@ -12,8 +12,8 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 FILENAMES = ["", ""] # filename 永遠只有2個
 
 # Configure logging 就是那些原本在terminal 的東西會跑到app.log 這樣比較好真錯我覺得
-logging.basicConfig(filename='app.log', level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)s %(message)s')
+#logging.basicConfig(filename='app.log', level=logging.DEBUG,
+                    #format='%(asctime)s %(levelname)s %(message)s')
 
 @app.route('/')
 def home():
