@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, send_from_directory, render_template
 import os
 from werkzeug.utils import secure_filename
 import subprocess
-import logging
 
 app = Flask(__name__)
 
@@ -10,10 +9,6 @@ UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 FILENAMES = ["", ""] # filename 永遠只有2個
-
-# Configure logging 就是那些原本在terminal 的東西會跑到app.log 這樣比較好真錯我覺得
-#logging.basicConfig(filename='app.log', level=logging.DEBUG,
-                    #format='%(asctime)s %(levelname)s %(message)s')
 
 @app.route('/')
 def home():
