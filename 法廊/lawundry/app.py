@@ -56,7 +56,7 @@ def upload_file():
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         
-        # 根据 box_id 更新 FILENAMES
+       
         if box_id == 'image-box1':
             FILENAMES[0] = filename
         elif box_id == 'image-box2':
@@ -154,9 +154,9 @@ def run_partial_script():
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
-    # 启动 Flask 应用，绑定到所有网络接口
+   
     app.run(host='0.0.0.0', port=5000, debug=True)
     
-    # 使用 ngrok 创建公共 URL
+   
     public_url = ngrok.connect(5000)
     print(f"Public URL: {public_url}")
