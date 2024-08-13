@@ -2,22 +2,25 @@ from flask import Flask, request, jsonify, send_from_directory, render_template
 import os
 from werkzeug.utils import secure_filename
 import subprocess
+from pyngrok import ngrok
 
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-FILENAMES = ["", ""] # filename 永遠只有2個
+FILENAMES = ["", ""]  # filename 永遠只有2個
 
 @app.route('/')
 def home():
     run_before_request()
     return render_template('about.html')
+
 @app.route('/about')
 def about():
     run_before_request()
     return render_template('about.html')
+
 @app.route('/index')
 def index():
     run_before_request()
@@ -27,7 +30,6 @@ def index():
 def send_css(path):
     return send_from_directory('css', path)
 
-# run BeforeRequest.sh 他的目的是為了要清空之前的資料 不然電腦早晚會爆炸
 def run_before_request():
     try:
         result = subprocess.run(['./BeforeRequest.sh', 'arg1', 'arg2'], capture_output=True, text=True, check=True)
@@ -69,12 +71,10 @@ def upload_file():
     else:
         return jsonify({"success": False, "error": "File type not allowed"}), 400
 
-# 把 upload 的 pic 丟到 uploads file 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# run .sh file
 @app.route('/run-script', methods=['POST'])
 def run_script():
     try:
@@ -91,8 +91,7 @@ def run_script():
     
     except subprocess.CalledProcessError as e:
         return jsonify({"success": False, "error": e.stderr}), 500
-    
-# 讀 yolo特徵然後回傳給前端
+
 @app.route('/get_features', methods=['POST'])
 def get_features():
     print("run get features")
@@ -101,7 +100,6 @@ def get_features():
 
     filenames = ['YOLOresult1.txt', 'YOLOresult2.txt']
     for index, filename in enumerate(filenames):
-        # 如果文件不存在就404
         if not os.path.isfile(filename):
             return jsonify({'error': f'File {filename} not found'}), 404
 
@@ -121,14 +119,12 @@ def get_features():
     print("Features2:", features2)
     return jsonify({'features1': features1, 'features2': features2})
 
-# 存被勾選的檔案是啥
 @app.route('/save_image_src', methods=['POST'])
 def save_image_src():
     data = request.json
     src1 = data.get('src1', '')
     src2 = data.get('src2', '')
 
-    # 只保留 "/partpic/sharp_1_cake.jpg" 部分
     src1_path = src1.split('static')[-1]
     src2_path = src2.split('static')[-1]
 
@@ -140,11 +136,9 @@ def save_image_src():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# run runpartial.sh
 @app.route('/run_partial_script', methods=['POST'])
 def run_partial_script():
     try:
-        # 使用 subprocess 运行 runPartial.sh
         result = subprocess.run(['./runPartial.sh'], capture_output=True, text=True, check=True)
         print("runPartial.sh executed successfully")
         
@@ -160,5 +154,9 @@ def run_partial_script():
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
-    # run
-    app.run(debug=True)
+    # 启动 Flask 应用，绑定到所有网络接口
+    app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    # 使用 ngrok 创建公共 URL
+    public_url = ngrok.connect(5000)
+    print(f"Public URL: {public_url}")
