@@ -78,7 +78,7 @@ def compare_image_regions(image_path1, image_path2):
         sim_v = cosine_similarity_between_histograms(hist_v1, hist_v2)
         
         # Average the cosine similarities for the final similarity score for this region
-        final_similarity = (sim_h + sim_s + sim_v) / 3.0
+        final_similarity = (sim_h + sim_s + sim_v) / 9.0
         similarities.append(final_similarity)
     
     # Convert similarity scores to percentages
