@@ -21,9 +21,11 @@ def compute_histogram(image, bins=256):
     hist_v = cv2.normalize(hist_v, hist_v).flatten()
     return hist_h, hist_s, hist_v
 
-def cosine_similarity_between_histograms(hist1, hist2):
-    # Compute cosine similarity between two histograms
-    return cosine_similarity(hist1.reshape(1, -1), hist2.reshape(1, -1))[0][0]
+def concatenate_histograms(histograms):
+    # Concatenate histograms (Hue, Saturation, Value) into one vector
+    hist_h, hist_s, hist_v = histograms
+    concatenated_hist = np.concatenate([hist_h, hist_s, hist_v])
+    return concatenated_hist
 
 def split_image_into_grid(image, grid_size=3):
     # Get image dimensions
@@ -43,43 +45,29 @@ def split_image_into_grid(image, grid_size=3):
             cells.append(cell)
     return cells
 
-def compute_concatenated_histogram(image):
+def compute_concatenated_histograms(image):
     # Split the image into 3x3 grid cells
     cells = split_image_into_grid(image)
     # Compute histograms for each cell
     histograms = [compute_histogram(cell) for cell in cells]
-    # Concatenate histograms
-    hist_h = np.concatenate([hist[0] for hist in histograms])
-    hist_s = np.concatenate([hist[1] for hist in histograms])
-    hist_v = np.concatenate([hist[2] for hist in histograms])
-    return hist_h, hist_s, hist_v
+    # Concatenate histograms for each cell into a single vector
+    concatenated_histograms = [concatenate_histograms(histogram) for histogram in histograms]
+    return concatenated_histograms
 
 def compare_image_regions(image_path1, image_path2):
     # Load and convert images to HSV
     hsv_image1 = load_and_convert_to_hsv(image_path1)
     hsv_image2 = load_and_convert_to_hsv(image_path2)
     
-    # Split images into regions
-    cells1 = split_image_into_grid(hsv_image1)
-    cells2 = split_image_into_grid(hsv_image2)
+    # Compute concatenated histograms for each region
+    concatenated_histograms1 = compute_concatenated_histograms(hsv_image1)
+    concatenated_histograms2 = compute_concatenated_histograms(hsv_image2)
     
-    # Compute histograms for each cell
-    histograms1 = [compute_histogram(cell) for cell in cells1]
-    histograms2 = [compute_histogram(cell) for cell in cells2]
-    
-    # Calculate similarities
+    # Calculate similarities for each region
     similarities = []
-    for i in range(len(histograms1)):
-        hist_h1, hist_s1, hist_v1 = histograms1[i]
-        hist_h2, hist_s2, hist_v2 = histograms2[i]
-        
-        sim_h = cosine_similarity_between_histograms(hist_h1, hist_h2)
-        sim_s = cosine_similarity_between_histograms(hist_s1, hist_s2)
-        sim_v = cosine_similarity_between_histograms(hist_v1, hist_v2)
-        
-        # Average the cosine similarities for the final similarity score for this region
-        final_similarity = (sim_h + sim_s + sim_v) / 9.0
-        similarities.append(final_similarity)
+    for hist1, hist2 in zip(concatenated_histograms1, concatenated_histograms2):
+        sim = cosine_similarity(hist1.reshape(1, -1), hist2.reshape(1, -1))[0][0]
+        similarities.append(sim)
     
     # Convert similarity scores to percentages
     similarity_percentages = [sim * 100 for sim in similarities]
@@ -94,17 +82,12 @@ def compare_entire_images(image_path1, image_path2):
     hsv_image1 = load_and_convert_to_hsv(image_path1)
     hsv_image2 = load_and_convert_to_hsv(image_path2)
     
-    # Compute histograms for the entire images
-    hist_h1, hist_s1, hist_v1 = compute_histogram(hsv_image1)
-    hist_h2, hist_s2, hist_v2 = compute_histogram(hsv_image2)
+    # Compute concatenated histograms for the entire images
+    concatenated_hist1 = concatenate_histograms(compute_histogram(hsv_image1))
+    concatenated_hist2 = concatenate_histograms(compute_histogram(hsv_image2))
     
-    # Compute cosine similarities for each channel
-    sim_h = cosine_similarity_between_histograms(hist_h1, hist_h2)
-    sim_s = cosine_similarity_between_histograms(hist_s1, hist_s2)
-    sim_v = cosine_similarity_between_histograms(hist_v1, hist_v2)
-    
-    # Average the cosine similarities for the final similarity score
-    final_similarity = (sim_h + sim_s + sim_v) / 3.0
+    # Compute cosine similarity for the entire images
+    final_similarity = cosine_similarity(concatenated_hist1.reshape(1, -1), concatenated_hist2.reshape(1, -1))[0][0]
     
     # Convert similarity score to percentage
     similarity_percentage = final_similarity * 100
@@ -159,7 +142,7 @@ def main():
         plot_histograms([histograms1[i], histograms2[i]], axes[(i//3) + 1, i % 3], f'HSV Histogram - Region {i+1}')
     
     # Add the similarity scores below the histograms
-    similarity_text =f"Region: {', '.join(f'Region {i+1}: {score:.2f}%' for i, score in enumerate(similarity_scores))}"
+    similarity_text = f"Region Similarity Scores: {', '.join(f'Region {i+1}: {score:.2f}%' for i, score in enumerate(similarity_scores))}"
     fig.text(0.5, 0.01, similarity_text, ha='center', va='center', fontsize=12, fontweight='bold', transform=fig.transFigure)
     
     # Add the overall similarity score at the bottom
