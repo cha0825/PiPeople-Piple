@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import torch
 from PIL import Image, ImageFilter
 import cv2
@@ -5,78 +6,89 @@ import numpy as np
 import os
 from ultralytics import YOLO
 
-# 加載 YOLOv9 訓練模型 # pip install ultralytics
-model = YOLO('yolov9s.pt')
+# 使用GPU加速
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"使用裝置: {device}")
 
-#v8
+# 載入 YOLOv10
+model = YOLO('/content/drive/MyDrive/好快/yolov10x.pt').to(device)  # 自行下載Yolo模型並指定路徑
 
-# 加載圖片
-img_path = 'pic118.jpg'  # 之後記得改圖片
-img_cv2 = cv2.imread(img_path)
-
-if img_cv2 is None:
-    raise FileNotFoundError(f"Cannot load image file: {img_path}")
+# 載入圖片
+img_path1 = '1.jpg'  # 請修改為實際的圖片路徑
+img_path2 = 'pic1.jpg'
+img_cv2 = cv2.imread(img_path1)
+img_cv2_2 = cv2.imread(img_path2)
 
 # 圖片大小處理
 scale_percent = 200  # 圖片放大100%
-width = int(img_cv2.shape[1] * scale_percent / 100)
-height = int(img_cv2.shape[0] * scale_percent / 100)
+width = int(img_cv2.shape[1] * scale_percent / 300)
+height = int(img_cv2.shape[0] * scale_percent / 300)
 dim = (width, height)
 img_cv2 = cv2.resize(img_cv2, dim, interpolation=cv2.INTER_LINEAR)
 
+width2 = int(img_cv2_2.shape[1] * scale_percent / 300)
+height2 = int(img_cv2_2.shape[0] * scale_percent / 300)
+dim2 = (width2, height2)
+img_cv2_2 = cv2.resize(img_cv2_2, dim2, interpolation=cv2.INTER_LINEAR)
+
 # 圖片轉換為 PIL 圖片，然後轉換為 RGB 格式
 img_pil = Image.fromarray(cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB))
+img_pil_2 = Image.fromarray(cv2.cvtColor(img_cv2_2, cv2.COLOR_BGR2RGB))
 
 # 進行檢測
 results = model(img_pil)
+results2 = model(img_pil_2)
 
 # 獲取檢測結果
-detections = results[0].boxes.data.cpu().numpy() # 0代表第一張圖片
-
-# 讀取圖片作為 numpy 陣列
-height, width, _ = img_cv2.shape
+detections = results[0].boxes.data.cpu().numpy()  # 0 代表第一張圖片
+detections_2 = results2[0].boxes.data.cpu().numpy()
 
 # 用來計算物件類別數量
 object_counts = {}
+object_counts_2 = {}
 
-# 創建存儲檢測範圍截圖的目錄
-output_dir = "partpic"
-os.makedirs(output_dir, exist_ok=True)
-
-# 處理每個檢測到的物件
+# 處理第一張圖片中的檢測到的物件
 for idx, (*box, conf, cls) in enumerate(detections):
-    x1, y1, x2, y2 = map(int, box)
-    label = f"{model.names[int(cls)]} {conf:.2f}"
-
-    # 更新物件數量
     class_name = model.names[int(cls)]
     if class_name in object_counts:
         object_counts[class_name] += 1
     else:
         object_counts[class_name] = 1
 
-    # 繪製邊框
-    cv2.rectangle(img_cv2, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    # 繪製標籤
-    cv2.putText(img_cv2, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-    print(f"ObjectName: {model.names[int(cls)]}")
+# 處理第二張圖片中的檢測到的物件
+for idx, (*box, conf, cls) in enumerate(detections_2):
+    class_name = model.names[int(cls)]
+    if class_name in object_counts_2:
+        object_counts_2[class_name] += 1
+    else:
+        object_counts_2[class_name] = 1
 
-    # 截取範圍內的圖像並保存
-    cropped_img = img_cv2[y1:y2, x1:x2]
-    cropped_img_path = os.path.join(output_dir, f"detection_{idx}_{class_name}.jpg")
-    cv2.imwrite(cropped_img_path, cropped_img)
+# 找出每張圖片中出現最多的物件及其數量
+max_count_1 = max(object_counts.values(), default=0)
+max_objects_1 = [obj for obj, count in object_counts.items() if count == max_count_1]
 
-    # 將截取的圖像轉換為 PIL 圖像並銳化
-    cropped_img_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-    sharp_img = cropped_img_pil.filter(ImageFilter.UnsharpMask(radius=5, percent=100, threshold=10))
-    sharp_img_path = os.path.join(output_dir, f"sharp_{idx}_{class_name}.jpg")
-    sharp_img.save(sharp_img_path)
+max_count_2 = max(object_counts_2.values(), default=0)
+max_objects_2 = [obj for obj, count in object_counts_2.items() if count == max_count_2]
 
 # 輸出物件數量
+print("第一張圖片物件數量:")
 for object_name, count in object_counts.items():
-    print(f"Number of {object_name}: {count}")
+    print(f"物件 {object_name} 的數量: {count}")
+print(f"最多物件數量: {max_count_1}，物件類型: {', '.join(max_objects_1)}")
 
-# 顯示結果圖片
-cv2.imshow('Detected Image', img_cv2)  # colab上要註解掉這行
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+print("\n第二張圖片物件數量:")
+for object_name, count in object_counts_2.items():
+    print(f"物件 {object_name} 的數量: {count}")
+print(f"最多物件數量: {max_count_2}，物件類型: {', '.join(max_objects_2)}")
+
+# 輸出相同標籤的物件
+print("\n相同標籤的物件:")
+common_objects = set(object_counts.keys()) & set(object_counts_2.keys())
+for object_name in common_objects:
+    print(f"物件 {object_name} - 第一張圖片: {object_counts[object_name]}，第二張圖片: {object_counts_2[object_name]}")
+
+# (可選) 顯示結果圖片
+# from matplotlib import pyplot as plt
+# plt.imshow(cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB))
+# plt.axis('off')
+# plt.show()
