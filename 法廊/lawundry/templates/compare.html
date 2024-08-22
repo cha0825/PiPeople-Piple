@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh">
+    {% include 'layout.html' %}
+    <body>
+        <div class="container">
+            {% include 'header.html' %}
+             <!--上傳的兩張圖-->
+            <div class="section">
+                <div class="upload-container">
+                    <div class="image-upload">
+                        <div class="image-box">
+                            <img src="{{ request.args.get('image1') }}" alt="Image 1" style="width: 100%; height: 100%;">
+                        </div>
+                    </div>
+                    <div class="image-upload">
+                        <div class="image-box">
+                            <img src="{{ request.args.get('image2') }}" alt="Image 2" style="width: 100%; height: 100%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="divider"></div> 
+            <!--overall cmp-->                
+            <div class="section">
+                <div class="section-title">Overall Comparison</div>
+                <div class="section-subtitle">Compare entire images through SSIM and HSV</div>
+                <div class="result">
+                    <div class="result-items-row"> 
+                        <div class="result-item">
+                            <button class="result-description" onclick="location.href='/index/compare/introSSIM';">SSIM</button>                               
+                            <div class="result-value">{{ request.args.get('ssim') }}</div>
+                        </div>
+                        <div class="result-item">
+                            <button class="result-description" onclick="location.href='/index/compare/introHSV';">HSV</button>
+                            <div class="result-value">{{ request.args.get('hsv') }}</div>
+                        </div>
+                        <div class="result-item">
+                            <button class="result-description" onclick="location.href='/index/compare/introCNN';">CNN</button>
+                            <div class="result-value">{{ request.args.get('cnn') }}</div>
+                        </div>
+                    </div>
+                    <div class="result-items-row">
+                        <div class="result-item">
+                            <button class="result-description" onclick="location.href='/index/compare/introCNN';">AI prediction</button>
+                            <div class="result-value"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="post-featrue-content" style="display: none;">
+                <div class="divider"></div>
+                <!--partial cmp-->
+                <div class="section">
+                    <div class="section-title">Partial Feature Comparison</div>
+                    <div class="section-subtitle">Compare YOLO-extracted features using SSIM and HSV.</div>
+                    <!--呼叫js 去跑這塊html-->
+                    <div class='feature-result-container' id="id-result-container" ></div>                 
+                    <!--submit按鈕 在兩邊都有局部特徵時才會顯示按鈕-->
+                    <div class="feature-upload-button-container" id="submit-button-container" style="display: none;">
+                        <div class="feature-upload-button" onclick="submitFeatures()">Submit</div>
+                    </div>
+                <!--選取完要比對的特徵後-->
+                    <div id="partial-selection" style="display: none;">
+                        <div class="partial-image-container">
+                            <div class="image-box" id="image-feature1">image 1</div>
+                            <div class="image-box" id="image-feature2">image 2</div>
+                        </div>
+                        <div class="result">
+                            <div class="result-items-row"> 
+                                <div class="result-item">
+                                    <div class="feature-result-description">SSIM</div>
+                                    <div class="result-value" id="partial-ssim-result"></div>                                
+                                </div>
+                                <div class="result-item">
+                                    <div class="feature-result-description">HSV</div>
+                                    <div class="result-value" id="partial-hsv-result"></div>
+                                </div>
+                                <div class="result-item">
+                                    <div class="feature-result-description">CNN</div>
+                                    <div class="result-value">41.61%</div>
+                                </div>
+                            </div>
+                            <div class="result-items-row">
+                                <div class="result-item">
+                                    <div class="feature-result-description">AI prediction</div>
+                                    <div class="result-value"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <div class="divider"></div>            
+        <!--尾巴-->
+        {% include 'footer.html' %}
+        </div>
+        <!--import js file-->
+        <script src="{{ url_for('static', filename='script/runCode.js') }}"></script>
+        <script src="{{ url_for('static', filename='script/SubmitFeatures.js') }}"></script>
+    </body>
+</html>

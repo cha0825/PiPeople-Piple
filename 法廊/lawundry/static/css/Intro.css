@@ -1,0 +1,125 @@
+/* 基本重置樣式 */
+body {
+    margin: 0;
+    font-family: Roboto, sans-serif;
+}
+/* 容器样式 */
+.container {
+    margin: 0 auto;
+    flex-direction: column;
+    align-items: center;
+}
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 80px;
+    background-color: #ffffff;
+    padding: 0 20px;
+    border-bottom: 1px solid #4d4d4d; /* 添加分隔线 */
+}
+.nav {
+    display: flex;
+    gap: 40px;
+}
+/* 分頁銜接样式 */
+.nav a {
+    color: #000000;
+    font-size: 25px;
+    text-decoration: none;
+    font-weight: 450;
+}
+.nav a:hover {
+    text-decoration: underline;
+}
+
+/*對buttom 預設值做修改*/
+.button {
+    appearance: none;
+    text-rendering: auto;
+    color: buttontext;
+    letter-spacing: normal;
+    word-spacing: normal;
+    line-height: normal;
+    text-transform: none;
+    text-indent: 0px;
+    text-shadow: none;
+    display: inline-block;
+    text-align: center;
+    align-items: flex-start;
+    cursor: pointer;
+    box-sizing: border-box;
+    background-color: transparent; /* Remove background color */
+    margin: 0em;
+    padding-block: 1px;
+    padding-inline: 6px;
+    border: none; /* Remove border */
+}
+
+/* title -> trademark comparison */
+.title {
+    color: #000000;
+    font-size: 30px;
+    font-weight: 500;
+    background-color: transparent; /* Remove background color */
+    border: none; /* Remove border */
+}
+
+/* 内容 */
+.content {
+    width: 100%;
+    padding: 20px;
+}
+
+/*-------------------------------------這之上是固定樣式-------------------------------------*/
+
+/* 標題樣式 */
+h1, h2, h3 {
+    color: #333; /* 標題顏色 */
+    margin-bottom: 0.5em; /* 標題下方間距 */
+}
+
+/* 分隔線樣式 */
+hr {
+    border: 0;
+    height: 1px;
+    background: #ddd; /* 分隔線顏色 */
+    margin: 20px 0; /* 分隔線上下間距 */
+}
+
+/* 內容區域樣式 */
+.container {
+    max-width: 1200px; /* 最大寬度 */
+    margin: 0 auto; /* 自動水平居中 */
+    padding: 20px; /* 內邊距 */
+}
+
+/* 數學公式區域樣式 */
+.equation {
+    background: #f4f4f4; /* 背景顏色 */
+    padding: 10px; /* 內邊距 */
+    border-left: 3px solid #ddd; /* 左邊框樣式 */
+    margin: 10px 0; /* 上下間距 */
+}
+
+/* 頁腳樣式 */
+footer {
+    text-align: center; /* 文字置中 */
+    padding: 10px 0; /* 上下內邊距 */
+    background: #f4f4f4; /* 背景顏色 */
+}
+
+/* 標頭樣式 */
+header {
+    background: #333; /* 背景顏色 */
+    color: #fff; /* 文字顏色 */
+    padding: 10px 0; /* 上下內邊距 */
+    text-align: center; /* 文字置中 */
+}
+
+/* 分隔線樣式 */
+.divider {
+    border-top: 2px solid #ddd; /* 上邊框樣式 */
+    margin: 20px 0; /* 上下間距 */
+}

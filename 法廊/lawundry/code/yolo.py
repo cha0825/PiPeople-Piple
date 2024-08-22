@@ -5,88 +5,94 @@ import logging
 from PIL import Image, ImageFilter
 from ultralytics import YOLO
 
-def main(input_path):
+def process_image(input_path, output_txt, partpic_dir, image_index):
     # Disable logging from ultralytics
     logging.getLogger('ultralytics').setLevel(logging.ERROR)
 
-    # 加載 YOLOv9 訓練模型 # pip install ultralytics
-    model = YOLO('yolov9s.pt')
+    # Load YOLOv10 model
+    model = YOLO('yolov10x.pt')
 
-    # 加載圖片
+    # Load image
     img_cv2 = cv2.imread(input_path)
-
     if img_cv2 is None:
         raise FileNotFoundError(f"Cannot load image file: {input_path}")
 
-    # 圖片大小處理
-    scale_percent = 200  # 圖片放大100%
+    # Resize image
+    scale_percent = 200
     width = int(img_cv2.shape[1] * scale_percent / 100)
     height = int(img_cv2.shape[0] * scale_percent / 100)
     dim = (width, height)
     img_cv2 = cv2.resize(img_cv2, dim, interpolation=cv2.INTER_LINEAR)
 
-    # 圖片轉換為 PIL 圖片，然後轉換為 RGB 格式
+    # Convert image to PIL
     img_pil = Image.fromarray(cv2.cvtColor(img_cv2, cv2.COLOR_BGR2RGB))
 
-    # 進行檢測
+    # Perform detection
     results = model(img_pil)
 
-    # 恢復 logging 配置（如果需要）
+    # Restore logging config (if needed)
     logging.getLogger('ultralytics').setLevel(logging.INFO)
 
-    # 獲取檢測結果
-    detections = results[0].boxes.data.cpu().numpy() # 0代表第一張圖片
+    # Get detection results
+    detections = results[0].boxes.data.cpu().numpy()
 
-    # 讀取圖片作為 numpy 陣列
-    height, width, _ = img_cv2.shape
+    # Prepare output directory
+    os.makedirs(partpic_dir, exist_ok=True)
 
-    # 用來計算物件類別數量
+    # Initialize counters
     object_counts = {}
     numOfAll = 0
     detected_objects = []
 
-    # 創建存儲檢測範圍截圖的目錄
-    output_dir = "static/partpic"
-    os.makedirs(output_dir, exist_ok=True)
+    # Process detections
+    with open(output_txt, 'w') as file:
+        for idx, (*box, conf, cls) in enumerate(detections):
+            x1, y1, x2, y2 = map(int, box)
+            label = f"{model.names[int(cls)]} {conf:.2f}"
 
-    # 處理每個檢測到的物件
-    for idx, (*box, conf, cls) in enumerate(detections):
-        x1, y1, x2, y2 = map(int, box)
-        label = f"{model.names[int(cls)]} {conf:.2f}"
+            # Update object counts
+            class_name = model.names[int(cls)].replace(" ", "_")
+            numOfAll += 1
+            detected_objects.append(class_name)
+            if class_name in object_counts:
+                object_counts[class_name] += 1
+            else:
+                object_counts[class_name] = 1
 
-        # 更新物件數量
-        class_name = model.names[int(cls)]
-        numOfAll += 1
-        detected_objects.append(class_name)
-        if class_name in object_counts:
-            object_counts[class_name] += 1
-        else:
-            object_counts[class_name] = 1
+            # Draw bounding box and label
+            cv2.rectangle(img_cv2, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(img_cv2, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-        # 繪製邊框
-        cv2.rectangle(img_cv2, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        # 繪製標籤
-        cv2.putText(img_cv2, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            # Save cropped images
+            cropped_img = img_cv2[y1:y2, x1:x2]
+            cropped_img_path = os.path.join(partpic_dir, f"detection_img{image_index}_{idx}_{class_name}.jpg")
+            cv2.imwrite(cropped_img_path, cropped_img)
 
-        # 截取範圍內的圖像並保存
-        cropped_img = img_cv2[y1:y2, x1:x2]
-        cropped_img_path = os.path.join(output_dir, f"detection_{idx}_{class_name}.jpg")
-        cv2.imwrite(cropped_img_path, cropped_img)
+            # Sharpen cropped images
+            cropped_img_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
+            sharp_img = cropped_img_pil.filter(ImageFilter.UnsharpMask(radius=5, percent=100, threshold=10))
+            sharp_img_path = os.path.join(partpic_dir, f"sharp_img{image_index}_{idx}_{class_name}.jpg")
+            sharp_img.save(sharp_img_path)
 
-        # 將截取的圖像轉換為 PIL 圖像並銳化
-        cropped_img_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
-        sharp_img = cropped_img_pil.filter(ImageFilter.UnsharpMask(radius=5, percent=100, threshold=10))
-        sharp_img_path = os.path.join(output_dir, f"sharp_{idx}_{class_name}.jpg")
-        sharp_img.save(sharp_img_path)
+        # Print results
+        file.write(f"{numOfAll}\n")
+        for obj in detected_objects:
+            file.write(f"{obj}\n")
 
-    print(numOfAll)
-    # Print only object names
-    for obj in detected_objects:
-        print(obj)
+def main(input_path1, input_path2):
+    # Define output paths
+    output_txt1 = "YOLOresult1.txt"
+    output_txt2 = "YOLOresult2.txt"
+    partpic_dir = "static/partpic"
+
+    # Process both images
+    process_image(input_path1, output_txt1, partpic_dir, image_index=1)
+    process_image(input_path2, output_txt2, partpic_dir, image_index=2)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='YOLOv9 Object Detection')
-    parser.add_argument('input_file', type=str, help='Path to the input image file')
+    parser = argparse.ArgumentParser(description='YOLOv10x Object Detection')
+    parser.add_argument('input_file1', type=str, help='Path to the first input image file')
+    parser.add_argument('input_file2', type=str, help='Path to the second input image file')
     args = parser.parse_args()
 
-    main(args.input_file)
+    main(args.input_file1, args.input_file2)

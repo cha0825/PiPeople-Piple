@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+
+<html lang="zh">
+{% include 'layoutIntro.html' %}
+<!--MathJax-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<body>
+<div class="container">
+
+    {% include 'header.html' %}
+    <!-- 內容 -->
+    <h1>SSIM - Structural Similarity Index 結構相似性</h1>
+
+    <hr>
+
+    <h2><strong>SSIM = Luminance * Contrast * Structure</strong></h2>
+    <ul>
+        <h3>Luminance 亮度</h3>
+        <p>以圖片μ（平均值）得出</p>
+        <div class="equation">
+            <p>$$\text{Luminance: }L(x, y) = \frac{2\mu_x\mu_y + C_1}{\mu_x^2 + \mu_y^2 + C_1}$$</p>
+        </div>
+
+        <h3>Contrast 對比度</h3>
+        <p>以圖片分佈的 σ（變異數）得出</p>
+        <div class="equation">
+            <p>$$\text{Contrast: } C(x, y) = \frac{2\sigma_x\sigma_y + C_2}{\sigma_x^2 + \sigma_y^2 + C_2}$$</p>
+        </div>
+
+        <h3>Structure 結構</h3>
+        <p>以兩張圖共變異數取得<br>
+        以兩張圖分佈形狀決定結構是否相似</p>
+        <div class="equation">
+            <p>$$\text{Structure: } S(x, y) = \frac{\mu_{xy} + C_3}{\sigma_x \sigma_y + C_3}$$</p>
+        </div>
+    </ul>
+    <hr>
+
+    <h2>reference</h2>
+    <!-- 內容 -->
+    <div class="divider"></div>
+    {% include 'footer.html' %}
+
+</div>
+</body>
+</html>

@@ -2,8 +2,23 @@ from flask import Flask, request, jsonify, send_from_directory, render_template
 import os
 from werkzeug.utils import secure_filename
 import subprocess
+import re
+from datetime import datetime
+# import logging
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates', static_folder='static')
+
+
+# # Configure logging
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s - %(levelname)s - %(message)s',
+#     handlers=[
+#         logging.FileHandler('app.log'),
+#         logging.StreamHandler()
+#     ]
+# )
+# logger = logging.getLogger(__name__)
 
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -13,7 +28,7 @@ FILENAMES = ["", ""] # filename 永遠只有2個
 @app.route('/')
 def home():
     run_before_request()
-    return render_template('about.html')
+    return render_template('index.html')
 @app.route('/about')
 def about():
     run_before_request()
@@ -22,10 +37,23 @@ def about():
 def index():
     run_before_request()
     return render_template('index.html')
-
-@app.route('/css/<path:path>')
-def send_css(path):
-    return send_from_directory('css', path)
+@app.route('/index/compare')
+def comapre():
+    image1_url = request.args.get('image1')
+    image2_url = request.args.get('image2')
+    return render_template('compare.html', image1=image1_url, image2=image2_url)
+@app.route('/index/compare/introSSIM')
+def introSSIM():
+    return render_template('introSSIM.html')
+@app.route('/index/compare/introHSV')
+def introHSV():
+    return render_template('introHSV.html')
+@app.route('/index/compare/introCNN')
+def introCNN():
+    return render_template('introCNN.html')
+@app.route('/index/compare/introRandomForest')
+def introRandomForest():
+    return render_template('introRandomForest.html')
 
 # run BeforeRequest.sh 他的目的是為了要清空之前的資料 不然電腦早晚會爆炸
 def run_before_request():
@@ -35,23 +63,34 @@ def run_before_request():
     except subprocess.CalledProcessError as e:
         print(f"Error executing script: {e.stderr}")
 
-# 确保上传文件夹存在
+# 確認上傳文件存在
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def sanitize_filename(filename):
+    filename = secure_filename(filename)
+    # 對檔名做時間處理
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    name, ext = os.path.splitext(filename)
+    new_filename = f"{name}_{timestamp}{ext}"
+    return re.sub(r'\s+', '_', new_filename)
 
+# uploads images
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
         return jsonify({"success": False, "error": "No file part"}), 400
+    
     file = request.files['file']
     box_id = request.form['box_id']
+
     if file.filename == '':
         return jsonify({"success": False, "error": "No selected file"}), 400
+    
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+        filename = sanitize_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         
         # 根据 box_id 更新 FILENAMES
@@ -74,20 +113,22 @@ def upload_file():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# run .sh file
+def read_file(file_path):
+    with open(file_path, 'r') as file:
+        return file.read().strip()
+
+# run runOverall.sh file
 @app.route('/run-script', methods=['POST'])
 def run_script():
     try:
         result = subprocess.run(['./runOverall.sh', 'arg1', 'arg2'], capture_output=True, text=True, check=True)
 
-        with open('HSVresult.txt', 'r') as hsv_file:
-            hsv = hsv_file.read().strip()
-            print("HSV result:", hsv)
-        with open('SSIMresult.txt', 'r') as ssim_file:
-            ssim = ssim_file.read().strip()
-            print("SSIM result:", ssim)
+        random_dir = read_file('imagefileName.txt')
+        hsv = read_file('HSVresult.txt')
+        ssim = read_file('SSIMresult.txt')
+        cnn = read_file('CNNresult.txt')
         
-        return jsonify({"success": True, "ssim": ssim, "hsv": hsv}), 200
+        return jsonify(success=True, random_dir=random_dir, ssim=ssim, hsv=hsv, cnn=cnn), 200
     
     except subprocess.CalledProcessError as e:
         return jsonify({"success": False, "error": e.stderr}), 500
@@ -125,12 +166,8 @@ def get_features():
 @app.route('/save_image_src', methods=['POST'])
 def save_image_src():
     data = request.json
-    src1 = data.get('src1', '')
-    src2 = data.get('src2', '')
-
-    # 只保留 "/partpic/sharp_1_cake.jpg" 部分
-    src1_path = src1.split('static')[-1]
-    src2_path = src2.split('static')[-1]
+    src1_path = data.get('src1', '').split('static')[-1]
+    src2_path = data.get('src2', '').split('static')[-1]
 
     try:
         with open('partial-imagesChecked.txt', 'w') as file:
@@ -144,16 +181,12 @@ def save_image_src():
 @app.route('/run_partial_script', methods=['POST'])
 def run_partial_script():
     try:
-        # 使用 subprocess 运行 runPartial.sh
-        result = subprocess.run(['./runPartial.sh'], capture_output=True, text=True, check=True)
-        print("runPartial.sh executed successfully")
         
-        with open('PartialHSVresult.txt', 'r') as hsv_file:
-            hsv = hsv_file.read().strip()
-            print("HSV result:", hsv)
-        with open('PartialSSIMresult.txt', 'r') as ssim_file:
-            ssim = ssim_file.read().strip()
-            print("SSIM result:", ssim)
+        result = subprocess.run(['./runPartial.sh'], capture_output=True, text=True, check=True)
+        print(result.stdout)
+        
+        hsv = read_file('PartialHSVresult.txt')
+        ssim = read_file('PartialSSIMresult.txt')
         
         return jsonify({"success": True, "ssim": ssim, "hsv": hsv}), 200
     except subprocess.CalledProcessError as e:

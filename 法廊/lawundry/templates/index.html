@@ -1,80 +1,37 @@
-{% include 'header.html' %}
+<!DOCTYPE html>
+<html lang="zh">
+<!--index.html-->
+{% include 'layout.html' %}
+<body>
+    <div class="container">
+        {% include 'header.html' %}
 <!--圖片上傳-->
         <div class="content">
             <div class="section">
-              <div class="section-title">Compare Images Easily</div>
-              <div class="section-subtitle">Upload two images and see the differences side by side</div>
-              <div class="upload-container">
-                <div class="image-upload">
-                    <div class="image-box" id="image-box1">image 1</div>
-                    <div class="upload-button" onclick="document.getElementById('file-input1').click();">Upload Image</div>
-                    <input type="file" id="file-input1" style="display: none;" onchange="uploadImage('image-box1', 'file-input1')">
+                <div class="section-title">Compare Images Easily</div>
+                <div class="section-subtitle">Upload two images and see the differences side by side</div>
+                <div class="upload-container">
+                    <div class="image-upload">
+                        <div class="image-box" id="image-box1">image 1</div>
+                        <div class="upload-button" onclick="document.getElementById('file-input1').click();">Upload Image</div>
+                        <input type="file" id="file-input1" style="display: none;" onchange="uploadImage('image-box1', 'file-input1')">
+                    </div>
+                    <div class="image-upload">
+                        <div class="image-box" id="image-box2">image 2</div>
+                        <div class="upload-button" onclick="document.getElementById('file-input2').click();">Upload Image</div>
+                        <input type="file" id="file-input2" style="display: none;" onchange="uploadImage('image-box2', 'file-input2')">
+                    </div>
                 </div>
-                <div class="image-upload">
-                    <div class="image-box" id="image-box2">image 2</div>
-                    <div class="upload-button" onclick="document.getElementById('file-input2').click();">Upload Image</div>
-                    <input type="file" id="file-input2" style="display: none;" onchange="uploadImage('image-box2', 'file-input2')">
-                </div>
-                
-              </div>
+                <button class="submitImage-button" id="submit-button" onclick="handleSubmit()">Submit</button>
+                <div class="section-title" id="running-message" style="display: none;">Running......</div>
             </div>
             <div class="divider"></div>
-<!--輸出結果-->
-            <div id="post-upload-content" style="display: none;">
-<!--overall cmp-->                
-                <div class="section">
-                    <div class="section-title">Overall Comparison</div>
-                    <div class="section-subtitle">Comparing entire images through SSIM and HSV</div>
-                    
-                    <div class="result-items-row"> 
-                        <div class="result-item">
-                            <div class="result-description">SSIM</div>                               
-                            <div class="result-value" id="ssim-result"></div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-description">HSV</div>
-                            <div class="result-value" id="hsv-result"></div>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="divider"></div>
-<!--partial cmp-->
-                <div class="section">
-                    <div class="section-title">Partial Feature Comparison</div>
-                    <div class="section-subtitle">Comparing YOLO-extracted features using SSIM and HSV.</div>
-                    <!--呼叫js 去跑這塊html-->
-                    <div classs='feature-result-container' id="id-result-container" ></div>                 
-                    <!--submit按鈕 在兩邊都有局部特徵時才會顯示按鈕-->
-                    <div class="feature-upload-button-container" id="submit-button-container" style="display: none;">
-                        <div class="feature-upload-button" onclick="submitFeatures()">Submit</div>
-                    </div>
-<!--選取完要比對的特徵後-->
-                    <div id="partial-selection" style="display: none;">
-                        <div class="partial-image-container">
-                            <div class="image-box" id="image-feature1">image 1</div>
-                            <div class="image-box" id="image-feature2">image 2</div>
-                        </div>
-                        <div class="result-items-row"> 
-                            <div class="result-item">
-                                <div class="result-description">SSIM</div>                               
-                                <div class="result-value" id="partial-ssim-result"></div>                                
-                            </div>
-                            <div class="result-item">
-                                <div class="result-description">HSV</div>
-                                <div class="result-value" id="partial-hsv-result"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="divider"></div>            
-                </div>
-            </div>
+        </div>
 <!--尾巴-->
 {% include 'footer.html' %}
+    </div>
 <!--import js file-->
 <script src="{{ url_for('static', filename='script/UploadImage.js') }}"></script>
-<script src="{{ url_for('static', filename='script/SubmitFeatures.js') }}"></script>
 
 </body>
 </html>
